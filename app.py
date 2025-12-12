@@ -41,17 +41,31 @@ def mes_extenso(mes):
     ]
     return nomes[mes - 1]
 
-
 def registrar_em_aba_mensal(item):
-    ano = int(item["data"][0:4])
-    mes = int(item["data"][5:7])
+    data_str = item.get("data")
+    if not data_str:
+        return
+
+    ano = int(data_str[:4])
+    mes = int(data_str[5:7])
     nome_aba = f"{mes_extenso(mes)} - {ano}"
 
-    try:
-        ws = sheet.worksheet(nome_aba)
-    except:
-        ws = sheet.add_worksheet(title=nome_aba, rows=2000, cols=20)
-        ws.append_row(["id", "nome", "valor", "categoria", "usuario", "data", "hora"])
+    # 🔒 Lista uma única vez
+    abas = {ws.title: ws for ws in sheet.worksheets()}
+
+    if nome_aba not in abas:
+        ws = sheet.add_worksheet(
+            title=nome_aba,
+            rows=2000,
+            cols=20
+        )
+        ws.append_row([
+            "id", "nome", "valor",
+            "categoria", "usuario",
+            "data", "hora"
+        ])
+    else:
+        ws = abas[nome_aba]
 
     ws.append_row([
         item.get("id", ""),
