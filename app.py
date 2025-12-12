@@ -5,6 +5,13 @@ from db import load_table, append_row, overwrite_table, sheet
 
 st.set_page_config(page_title="Finanças Pessoais", layout="wide")
 
+# CACHE DE ABAS (ANTI-API ERROR)
+
+if "abas_cache" not in st.session_state:
+    st.session_state.abas_cache = {
+        ws.title: ws for ws in sheet.worksheets()
+    }
+
 # Funções auxiliares
 
 def to_float(valor):
@@ -50,9 +57,9 @@ def registrar_em_aba_mensal(item):
     mes = int(data_str[5:7])
     nome_aba = f"{mes_extenso(mes)} - {ano}"
 
-    # 🔒 Lista uma única vez
-    abas = {ws.title: ws for ws in sheet.worksheets()}
+    abas = st.session_state.abas_cache
 
+    # cria a aba somente se não existir
     if nome_aba not in abas:
         ws = sheet.add_worksheet(
             title=nome_aba,
@@ -64,6 +71,9 @@ def registrar_em_aba_mensal(item):
             "categoria", "usuario",
             "data", "hora"
         ])
+
+        # atualiza o cache
+        abas[nome_aba] = ws
     else:
         ws = abas[nome_aba]
 
