@@ -57,9 +57,8 @@ def registrar_em_aba_mensal(item):
     mes = int(data_str[5:7])
     nome_aba = f"{mes_extenso(mes)} - {ano}"
 
-    abas = st.session_state.abas_cache
+    abas = get_abas()
 
-    # cria a aba somente se não existir
     if nome_aba not in abas:
         ws = sheet.add_worksheet(
             title=nome_aba,
@@ -72,8 +71,9 @@ def registrar_em_aba_mensal(item):
             "data", "hora"
         ])
 
-        # atualiza o cache
+        # 🔥 atualiza cache
         abas[nome_aba] = ws
+        st.session_state.abas_planilha = abas
     else:
         ws = abas[nome_aba]
 
