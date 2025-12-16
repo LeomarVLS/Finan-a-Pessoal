@@ -5,6 +5,13 @@ from db import load_table, append_row, overwrite_table, sheet
 
 st.set_page_config(page_title="Finanças Pessoais", layout="wide")
 
+def get_abas():
+    if "abas_planilha" not in st.session_state:
+        st.session_state.abas_planilha = {
+            ws.title: ws for ws in sheet.worksheets()
+        }
+    return st.session_state.abas_planilha
+
 # CACHE DE ABAS (ANTI-API ERROR)
 
 if "abas_cache" not in st.session_state:
