@@ -19,8 +19,6 @@ if "abas_cache" not in st.session_state:
         ws.title: ws for ws in sheet.worksheets()
     }
 
-# Funções auxiliares
-
 def to_float(valor):
     if isinstance(valor, (int, float)):
         return float(valor)
@@ -78,7 +76,6 @@ def registrar_em_aba_mensal(item):
             "data", "hora"
         ])
 
-        # 🔥 atualiza cache
         abas[nome_aba] = ws
         st.session_state.abas_planilha = abas
     else:
@@ -186,8 +183,8 @@ if st.sidebar.button("Salvar Categoria"):
         st.sidebar.error("Digite uma categoria!")
 
 st.title("💰 Controle de Finanças Pessoais")
-tab1, tab2, tab3, tab4 = st.tabs(
-    ["Gastos Fixos", "Gastos Pessoais", "Rendas", "📈 Gráficos"]
+tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    ["Gastos Fixos", "Gastos Pessoais", "Rendas", "Gráficos", "Histórico"]
 )
 
 # TAB 1 — GASTOS FIXOS
@@ -316,7 +313,6 @@ with tab3:
 
             append_row("incomes", item)
 
-            # Se for renda fixa → vira template mensal
             if renda_fixa:
                 append_row("income_templates", {
                     "id": item["id"],
@@ -447,3 +443,42 @@ with tab4:
         st.bar_chart(gastos_usuario)
     else:
         st.info("Nenhum gasto encontrado para usuários.")
+
+# TAB 5 — HISTÓRICO DE COMPRAS
+
+with tab5:
+    st.header("Histórico de Compras por Usuário")
+
+    historico_por_usuario = {}
+
+    for item in fixed_expenses + personal_expenses:
+        usuario = get_value(item, 4, "Não informado")
+
+        if usuario not in historico_por_usuario:
+            historico_por_usuario[usuario] = []
+
+        historico_por_usuario[usuario].append(item)
+
+    if not historico_por_usuario:
+        st.info("Nenhum gasto registrado.")
+    else:
+        for usuario, compras in historico_por_usuario.items():
+            total_usuario = sum(
+                to_float(get_value(c, 2, 0)) for c in compras
+            )
+
+            with st.expander(f"👤 {usuario} — Total: R$ {total_usuario:.2f}"):
+                compras_ordenadas = sorted(
+                    compras, key=lambda x: get_value(x, 5)
+                )
+
+                for c in compras_ordenadas:
+                    nome = get_value(c, 1)
+                    valor = to_float(get_value(c, 2, 0))
+                    categoria = get_value(c, 3)
+                    data = get_value(c, 5)
+
+                    st.markdown(
+                        f"- **{data}** | {nome} "
+                        f"(_{categoria}_) — **R$ {valor:.2f}**"
+                    )
